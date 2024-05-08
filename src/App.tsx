@@ -59,14 +59,17 @@ const App = () => {
       return
     }
     try {
-      const processedBuffer = process_image(fbBuffer)
-      const buf = new flatbuffers.ByteBuffer(processedBuffer)
-      const imageProc = ImageProcessing.getRootAsImageProcessing(buf)
+      // WASM画像処理実行
+      const resultBuffer = process_image(fbBuffer)
 
+      // ImageProcessingスキーマをもとに各データを抽出
+      const buf = new flatbuffers.ByteBuffer(resultBuffer)
+      const imageProc = ImageProcessing.getRootAsImageProcessing(buf)
       const width = imageProc.width()
       const height = imageProc.height()
       const pixels = imageProc.bufArray() as Uint8Array
 
+      // image-jsのImageオブジェクト作成 (PNGフォーマットのグレースケールデータ)
       const img = new Image(width, height, pixels, {
         components: 1,
         alpha: 0,
@@ -74,6 +77,8 @@ const App = () => {
       })
       const imgFile = img.toBuffer({ format: 'png' })
       const blob = new Blob([imgFile.buffer], { type: 'image/png' })
+
+      // 結果画像描画のためにURL生成
       const imgUrl = URL.createObjectURL(blob)
       setImageUrl(imgUrl)
     } catch (error) {
