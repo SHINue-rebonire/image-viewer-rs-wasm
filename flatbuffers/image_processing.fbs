@@ -1,0 +1,9 @@
+namespace image_processing;
+
+table ImageProcessing {
+    width: uint;
+    height: uint;
+    buf: [ubyte] (required);
+}
+
+root_type ImageProcessing;
