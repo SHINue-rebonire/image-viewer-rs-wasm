@@ -8,6 +8,9 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+rust_wasm/target
+rust_wasm/pkg
+rust_wasm/Cargo.lock
 dist
 dist-ssr
 *.local
