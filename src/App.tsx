@@ -91,7 +91,7 @@ const App = () => {
       <AppBar position="fixed">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Image Processor
+            WASM Sample App
           </Typography>
           <input
             accept="image/png"
@@ -103,17 +103,17 @@ const App = () => {
           />
           <label htmlFor="raised-button-file">
             <Button component="span" color="inherit">
-              Load Image
+              画像読み込み
             </Button>
           </label>
           <Button color="inherit" onClick={handleProcessImage}>
-            Process Image
+            実行
           </Button>
         </Toolbar>
       </AppBar>
       <Box
         sx={{
-          pt: 12,
+          pt: 6,
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
