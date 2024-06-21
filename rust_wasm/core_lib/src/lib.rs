@@ -15,11 +15,45 @@ fn to_grayscale_rgba(img: &DynamicImage) -> GrayImage {
     gray_img
 }
 
-/// Local Binary Pattern特徴量を計算する関数
-pub fn local_binary_pattern(pixel_data: Vec<u8>, width: u32, height: u32) -> Vec<u8> {
-    // 結果用のGrayImageを生成
-    let mut lbp_img = GrayImage::new(width, height);
+fn transform_lbp_image(
+    gray_image: &ImageBuffer<Luma<u8>, Vec<u8>>,
+    width: u32,
+    height: u32,
+) -> ImageBuffer<Luma<u8>, Vec<u8>> {
+    let mut lbp_img = ImageBuffer::new(width, height);
+    let directions = [
+        (-1, -1),
+        (0, -1),
+        (1, -1),
+        (1, 0),
+        (1, 1),
+        (0, 1),
+        (-1, 1),
+        (-1, 0),
+    ];
 
+    for y in 1..height - 1 {
+        for x in 1..width - 1 {
+            let center_pixel = gray_image.get_pixel(x, y).0[0];
+            // 左上から時計回りで注目画素(中央)の値との比較を行う
+            let pattern = directions
+                .iter()
+                .enumerate()
+                .fold(0u8, |acc, (idx, &(dx, dy))| {
+                    let nx = (x as i32 + dx) as u32;
+                    let ny = (y as i32 + dy) as u32;
+                    let neighbor_pixel = gray_image.get_pixel(nx, ny).0[0];
+                    acc | ((neighbor_pixel >= center_pixel) as u8) << (7 - idx)
+                });
+            lbp_img.put_pixel(x, y, Luma([pattern]));
+        }
+    }
+
+    lbp_img
+}
+
+/// 画像からLocal Binary Pattern特徴量を計算し、輝度値を変換する関数
+pub fn local_binary_pattern(pixel_data: Vec<u8>, width: u32, height: u32) -> Vec<u8> {
     // DynamicImageに変換
     let buffer = ImageBuffer::from_raw(width, height, pixel_data).expect("Failed");
     let img = DynamicImage::ImageRgba8(buffer);
@@ -27,34 +61,8 @@ pub fn local_binary_pattern(pixel_data: Vec<u8>, width: u32, height: u32) -> Vec
     // GrayScaleに変換
     let gray_image = to_grayscale_rgba(&img);
 
-    for y in 1..height - 1 {
-        for x in 1..width - 1 {
-            let center_pixel = gray_image.get_pixel(x, y).0[0];
-            // 左上から時計回りで中央画素値との比較を行う
-            let directions = [
-                (-1, -1),
-                (0, -1),
-                (1, -1),
-                (1, 0),
-                (1, 1),
-                (0, 1),
-                (-1, 1),
-                (-1, 0),
-            ];
-            let mut pattern: u8 = 0;
-
-            // 2進数として解釈した後に、注目画素値を10進数(0~255)の値に置き換える
-            for (idx, &(dx, dy)) in directions.iter().enumerate() {
-                let nx = (x as i32 + dx) as u32;
-                let ny = (y as i32 + dy) as u32;
-                let neighbor_pixel = gray_image.get_pixel(nx, ny).0[0];
-                if neighbor_pixel >= center_pixel {
-                    pattern |= 1 << (7 - idx);
-                }
-            }
-            lbp_img.put_pixel(x, y, Luma([pattern]));
-        }
-    }
+    // LBP画像に変換
+    let lbp_img = transform_lbp_image(&gray_image, width, height);
 
     lbp_img.to_vec()
 }
